@@ -66,14 +66,14 @@ def getAll():
                         response.append(item)
                 counter = counter + 1
             
-            return jsonify(response)
+            return jsonify(response), 200
         except Exception as e:
-            return jsonify({'error': (e)}), 401
+            return jsonify({'error': (e)}), 500
     
     if request.method == 'POST':
         try:
             if not request.is_json:
-                return jsonify({'error': 'payload must be in json format'}), 401
+                return jsonify({'error': 'payload must be in json format'}), 400
                 
             task_data = request.get_json()
             title = task_data.get('title')
@@ -82,7 +82,7 @@ def getAll():
             status = task_data.get('status')
             
             if status not in status_valid:
-                return jsonify({'error': 'Invalid status'}), 401
+                return jsonify({'error': 'Invalid status'}), 400
                
             new_task = {
                     '_id': getNextID(),
@@ -94,9 +94,9 @@ def getAll():
             
             tasks.append(new_task)
             
-            return jsonify({'message':'Task added successful.'}), 200
+            return jsonify({'message':'Task added successful.'}), 201
         except Exception as e:
-            return jsonify({'error': str(e)}), 401
+            return jsonify({'error': str(e)}), 500
 
 
 @app.route('/tasks/<int:task_id>', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
@@ -107,11 +107,13 @@ def getSpecific(task_id):
             if task['_id'] == task_id:
                 Task = task
                 return jsonify(Task), 200
+        
+        return jsonify({'error': 'Task not found.'}), 404
                 
     if request.method == 'PUT' or request.method == 'PATCH':
         try:
             if not request.is_json:
-                return jsonify({'error': 'format must be in json'}), 401
+                return jsonify({'error': 'format must be in json'}), 400
             
             task_data = request.get_json()
             title = task_data.get('title')
@@ -128,18 +130,22 @@ def getSpecific(task_id):
                         item['status'] = status
                     
                     return jsonify({'message': 'update successful'}), 200
+                    
+            return jsonify({'error': 'Task not found.'}), 404
             
         except Exception as e:
-            return jsonify({'error': str(e)}), 401
+            return jsonify({'error': str(e)}), 500
             
     if request.method == 'DELETE':
         counter = 0
         for item in tasks:
             if item['_id'] == task_id:
-                tasks.pop(item['_id']-1)
-                return jsonify({'message': 'delete successful'}), 200
-            else:
-                counter = counter + 1
+                return tasks.pop(item['_id']-1), 204
+            
+            counter = counter + 1
+                
+        
+        return jsonify({'error': 'Task not found.'}), 404
 
 
 @app.route('/users/create', methods=['POST'])
