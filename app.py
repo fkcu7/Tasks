@@ -32,11 +32,11 @@ users = []
 status_valid = ['pending', 'ongoing','completed']
 
 def getNextID():
-    counter = 1
+    Task = []
     for task in tasks:
-        counter = counter + 1
+        Task = task
         
-    return counter
+    return Task['_id'] + 1
     
     
 @app.route('/tasks', methods=['GET', 'POST'])
@@ -48,6 +48,12 @@ def getAll():
             status = request.args.get('status')
             counter = 0
             response = []
+            
+            if not title and not date and not status:
+                for item in tasks: 
+                    response.append(item)
+                    
+                    
             for item in tasks:
                 if title is not None:
                     if title == item['title']:
@@ -130,7 +136,7 @@ def getSpecific(task_id):
         counter = 0
         for item in tasks:
             if item['_id'] == task_id:
-                tasks.pop(counter)
+                tasks.pop(item['_id']-1)
                 return jsonify({'message': 'delete successful'}), 200
             else:
                 counter = counter + 1
